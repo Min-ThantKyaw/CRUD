@@ -8,6 +8,7 @@ use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
@@ -18,7 +19,6 @@ class AuthController extends Controller
     public function loginUser()
     {
         $user = Auth::user();
-        dd($user);
         return view('layouts.master', compact('user'));
     }
     public function registerPage()
@@ -51,7 +51,8 @@ class AuthController extends Controller
         try {
             $user = $this->loginService->loginUser($request->validated());
 
-            // Redirect based on user role
+            $request->session()->put('loginId', $user->id);
+            Auth::login($user);
             if ($user->type == 1) {
                 return redirect()->route('user.userlist');
             } else {
@@ -60,5 +61,16 @@ class AuthController extends Controller
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
+    }
+
+    public function logout()
+    {
+        if (Session::has('loginId')) {
+            Session::pull('loginId');
+        }
+
+        Auth::logout();
+
+        return redirect()->route('loginPage');
     }
 }

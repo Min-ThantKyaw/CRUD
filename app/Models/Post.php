@@ -37,13 +37,13 @@ class Post extends Model
         return $this->belongsTo(User::class, 'deleted_user_id');
     }
 
-    public function search($searchTerm)
-    {
-        return self::with('user')
-            ->when($searchTerm, function ($query, $searchTerm) {
-                return $query->where('title', 'LIKE', "%{$searchTerm}%")
-                    ->orWhere('body', 'LIKE', "%{$searchTerm}%");
-            })
-            ->get();
-    }
+    // public function search($searchTerm)
+    // {
+    //     return self::with('user')
+    //         ->when($searchTerm, function ($query, $searchTerm) {
+    //             return $query->where('title', 'LIKE', "%{$searchTerm}%")
+    //                 ->orWhere('body', 'LIKE', "%{$searchTerm}%");
+    //         })
+    //         ->get();
+    // }
 }

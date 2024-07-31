@@ -12,6 +12,7 @@ Route::get('/register', [AuthController::class, 'registerPage'])->name('register
 Route::get('/login/user', [AuthController::class, 'loginUser']); //To compact login user
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/user/list', [UserController::class, 'userListPage'])->name('user.userlist');
 Route::get('/user/create', [UserController::class, 'userCreatePage'])->name('user.userCreatePage');
