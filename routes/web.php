@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 
+
 Route::get('/', [AuthController::class, 'loginPage'])->name('loginPage');
 Route::get('/login', [AuthController::class, 'loginPage'])->name('loginPage');
 Route::get('/register', [AuthController::class, 'registerPage'])->name('registerPage');
@@ -21,3 +22,7 @@ Route::get('user/profile/edit', [ProfileController::class, 'profileEditPage'])->
 Route::get('/post/list', [PostController::class, 'postListPage'])->name('post.postlist');
 Route::get('post/create/page', [PostController::class, 'postCreatePage'])->name('post.postCreatePage');
 Route::post('/post/add', [PostController::class, 'postAdd'])->name('post.add');
+
+//CSV
+Route::post('/posts/upload', [PostController::class, 'uploadCsv'])->name('post.upload');
+Route::get('/posts/download', [PostController::class, 'downloadExcel'])->name('post.download');
