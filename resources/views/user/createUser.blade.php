@@ -6,25 +6,26 @@
                 <h4>Register</h4>
             </div>
             <div class="bg-light">
-                <form action="{{ route('register') }}" method="POST">
+                <form action="{{ route('user.confirm') }}" method="POST">
                     @csrf
                     <label for="">Name</label>
-                    <input type="text" name="name" class="form-control">
+                    <input type="text" name="name" class="form-control" value="{{ old('name') }}">
                     @error('name')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
                     <label for="" class="my-2">Email Address</label>
-                    <input type="text" name="email" class="form-control">
+                    <input type="text" name="email" class="form-control" value="{{ old('email') }}">
                     @error('email')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
                     <label for="" class="my-2">Password</label>
-                    <input type="password" name="password" class="form-control">
+                    <input type="password" name="password" class="form-control" value="{{ old('password') }}">
                     @error('password')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
                     <label for="" class="my-2">Password Confirmation</label>
-                    <input type="password" name="password_confirmation" class="form-control">
+                    <input type="password" name="password_confirmation" class="form-control"
+                        value="{{ old('password_confirmation') }}">
                     @error('password')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
@@ -38,17 +39,18 @@
                     @endif
 
                     <label for="" class="my-2">Phone</label>
-                    <input type="text" name="phone" class="form-control">
+                    <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
                     @error('phone')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
                     <label for="" class="my-2">Date Of Birth</label>
-                    <input type="date" id="start" name="dob" value="" class="form-control">
+                    <input type="date" id="start" name="dob" value="" class="form-control"
+                        value="{{ old('dob') }}">
                     @error('dob')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
                     <label for="">Address</label>
-                    <input type="text" name="address" class="form-control">
+                    <input type="text" name="address" class="form-control" value="{{ old('address') }}">
                     @error('address')
                         <small class="alert text-danger">{{ $message }}</small><br>
                     @enderror
@@ -59,7 +61,7 @@
                     @enderror
                     <div>
                         <input type="submit" value="Register" class="btn btn-success my-2">
-                        <input type="submit" value="Clear" class="btn btn-secondary my-2">
+                        <input type="reset" value="Clear" class="btn btn-secondary my-2">
                     </div>
 
                 </form>

@@ -17,15 +17,16 @@ class RegisterService
         $user->password = Hash::make($data['password']);
         $user->phone = $data['phone'];
         $user->address = $data['address'] ?? null;
-        $user->type = $data['type'] ?? 0;
+        $user->type = $data['type'] ?? 1;
         if (isset($data['dob'])) {
-            $user->dob = Carbon::createFromFormat('Y-m-d', $data['dob'])->format('Y-m-d');
+            $user->dob = Carbon::parse(($data['dob']));
         }
 
         // Handle file upload for profile
         if (isset($data['profile'])) {
-            $filePath = $data['profile']->store('profiles', 'public');
-            $user->profile = $filePath;
+            $fileName = uniqid() . $data['profile']->getClientOriginalName();
+            $data['profile']->storeAs('public', $fileName);
+            $user['profile'] = $fileName;
         }
 
         $user->created_user_id = Auth::id() ?? null;

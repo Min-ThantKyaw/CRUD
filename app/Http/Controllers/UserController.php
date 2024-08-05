@@ -17,4 +17,9 @@ class UserController extends Controller
     {
         return view('user.createUser');
     }
+    public function confirmPage(Request $request)
+    {
+        $data = $request->all();
+        return view('user.confirmCreateUser', ['data' => $data]);
+    }
 }

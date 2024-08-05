@@ -15,12 +15,12 @@
                 <label for="">Address</label>
                 <input type="text" name="" value="{{ $authUser->address }}" class="form-control" disabled>
                 <label for="">DOB</label>
-                <input type="date" name="" value="{{ $authUser->dob }}" class="form-control" disabled>
+                <input type="text" name="" value="{{ $authUser->dob }}" class="form-control" disabled>
                 <label for="">Type</label>
                 <input type="text" name=""
                     value="{{ $authUser->type == 1 ? 'Admin' : 'User' }}"class="form-control" disabled>
                 @if ($authUser->profile)
-                    <img src="{{ asset('storage/' . $user->profile) }}" alt="Profile Photo"
+                    <img src="{{ asset('storage/' . $authUser->profile) }}" alt="Profile Photo"
                         class="img-fluid rounded-circle">
                 @else
                     <img src="{{ asset('images/default_photo.png') }}" alt="Profile Photo"

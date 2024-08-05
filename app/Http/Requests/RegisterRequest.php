@@ -28,7 +28,7 @@ class RegisterRequest extends FormRequest
             'phone' => 'required|max:15|unique:users',
             'address' => 'max:255',
             'dob' => 'nullable',
-            'profile' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            // 'profile' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
 
         ];
     }
