@@ -21,7 +21,7 @@
                     <h4>Register</h4>
                 </div>
                 <div class="bg-light">
-                    <form action="{{ route('register') }}" method="post">
+                    <form action="{{ route('user.store') }}" method="post">
                         @csrf
                         <label for="">Name</label>
                         <input type="text" name="name" class="form-control">

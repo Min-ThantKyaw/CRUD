@@ -25,10 +25,10 @@ class RegisterRequest extends FormRequest
             'name' => 'required|max:255',
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|min:8|confirmed',
-            'phone' => 'required|max:15|unique:users',
-            'address' => 'max:255',
+            'phone' => 'nullable|max:15|unique:users',
+            'address' => 'nullable|max:255',
             'dob' => 'nullable',
-            // 'profile' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            // 'profile' => 'nullable|file|mimes:jpg,jpeg,png',
 
         ];
     }

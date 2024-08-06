@@ -4,22 +4,34 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Services\RegisterService;
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
     public function userListPage()
     {
-        $users = User::all();
+        $users = User::with('createUser')->get();
         return view('user.userList', compact('users'));
     }
     public function userCreatePage()
     {
         return view('user.createUser');
     }
-    public function confirmPage(Request $request)
+    protected $registerService;
+
+    public function __construct(RegisterService $registerService)
     {
-        $data = $request->all();
-        return view('user.confirmCreateUser', ['data' => $data]);
+        $this->registerService = $registerService;
+    }
+    public function createUser(RegisterRequest $request)
+    {
+        // $data = $request->all();
+        // dd($data);
+
+        $user = $this->registerService->registerUser($request);
+        Auth::login($user);
+        return redirect()->route('post.postlist')->with('success', 'Created Account Successfully');
     }
 }

@@ -17,7 +17,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/user/list', [UserController::class, 'userListPage'])->name('user.userlist');
 Route::get('/user/create', [UserController::class, 'userCreatePage'])->name('user.userCreatePage');
-Route::post('user/confirm', [UserController::class, 'confirmPage'])->name('user.confirm');
+Route::post('user/store', [UserController::class, 'createUser'])->name('user.store');
 
 
 Route::get('user/profile', [ProfileController::class, 'profilePage'])->name('user.profilePage');

@@ -434,3 +434,42 @@ ditailMOadl
         </div>
     </div>
 </div>
+
+<?php namespace App\Services;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+
+class RegisterService
+{
+    public function saveUser($data, $user = null)
+    {
+        if (is_null($user)) {
+            $user = new User();
+        }
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+
+        if (!empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        $user->phone = $data['phone'] ?? null;
+        $user->address = $data['address'] ?? null;
+        $user->dob = $data['dob'] ?? null;
+
+        if (isset($data['profile'])) {
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+            $path = $data['profile']->store('profiles', 'public');
+            $user->profile_photo_path = $path;
+        }
+
+        $user->save();
+
+        return $user;
+    }
+}

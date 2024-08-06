@@ -35,16 +35,6 @@ class AuthController extends Controller
         $this->registerService = $registerService;
     }
 
-    public function register(RegisterRequest $request)
-    {
-        try {
-            $user = $this->registerService->registerUser($request->validated());
-
-            return redirect()->route('loginPage')->with('success', 'Register Success.Login Again.');
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors($e->getMessage())->withInput();
-        }
-    }
     public function login(LoginRequest $request)
     {
 
@@ -53,11 +43,8 @@ class AuthController extends Controller
 
             $request->session()->put('loginId', $user->id);
             Auth::login($user);
-            if ($user->type == 1) {
-                return redirect()->route('user.userlist');
-            } else {
-                return redirect()->route('post.postlist');
-            }
+
+            return redirect()->route('post.postlist');
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         }

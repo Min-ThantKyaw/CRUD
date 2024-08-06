@@ -15,7 +15,7 @@ class RegisterService
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->password = Hash::make($data['password']);
-        $user->phone = $data['phone'];
+        $user->phone = $data['phone'] ?? null;
         $user->address = $data['address'] ?? null;
         $user->type = $data['type'] ?? 1;
         if (isset($data['dob'])) {

@@ -13,7 +13,7 @@
                     <input type="text" name="description" value="" class="form-control" disabled>
                     <div>
                         <input type="submit" value="Confirm" class="btn btn-success my-2">
-                        <a href="{{ route('user.userCreatePage')->withInput($data) }}">Cancel</a>
+                        {{-- <a href="{{ route('user.userCreatePage')->withInput($data) }}">Cancel</a> --}}
                     </div>
 
                 </form>

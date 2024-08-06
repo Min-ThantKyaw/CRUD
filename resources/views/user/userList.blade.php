@@ -35,11 +35,8 @@
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->name }}</td>
                         <td>
-                            @if ($user->type == 1)
-                                Admin
-                            @else
-                                User
-                            @endif
+                            {{ $user->type == 1 ? 'Admin' : 'User' }}
+
                         </td>
                         <td>{{ $user->phone }}</td>
                         <td>{{ $user->dob }}</td>

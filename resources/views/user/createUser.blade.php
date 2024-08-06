@@ -6,7 +6,7 @@
                 <h4>Register</h4>
             </div>
             <div class="bg-light">
-                <form action="{{ route('user.confirm') }}" method="POST">
+                <form action="{{ route('user.store') }}" method="POST">
                     @csrf
                     <label for="">Name</label>
                     <input type="text" name="name" class="form-control" value="{{ old('name') }}">
