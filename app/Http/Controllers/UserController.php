@@ -27,11 +27,7 @@ class UserController extends Controller
     }
     public function createUser(RegisterRequest $request)
     {
-        // $data = $request->all();
-        // dd($data);
-
         $user = $this->registerService->registerUser($request);
-        Auth::login($user);
         return redirect()->route('post.postlist')->with('success', 'Created Account Successfully');
     }
 }
