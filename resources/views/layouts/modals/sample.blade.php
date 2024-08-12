@@ -1,112 +1,79 @@
-<?php
-
-namespace App\Services;
-
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Carbon;
-
-class RegisterService
-{
-    public function registerUser($data)
-    {
-        return $this->saveUser(new User(), $data);
-    }
-
-    public function updateUser($userId, $data)
-    {
-        $user = User::find($userId);
-
-        if (!$user) {
-            return null;
-        }
-
-        return $this->saveUser($user, $data);
-    }
-
-    private function saveUser(User $user, $data)
-    {
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-
-        if (isset($data['password'])) {
-            $user->password = Hash::make($data['password']);
-        }
-
-        $user->phone = $data['phone'] ?? null;
-        $user->address = $data['address'] ?? null;
-        $user->type = $data['type'] ?? 1;
-
-        if (isset($data['profile']) && $data['profile']->isValid()) {
-            $file = $data['profile'];
-            $fileName = uniqid() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('profiles'), $fileName);
-            $user->profile = $fileName;
-        }
-
-        if (isset($data['dob'])) {
-            $user->dob = Carbon::parse($data['dob']);
-        }
-
-        $user->created_user_id = $user->exists ? $user->created_user_id : Auth::id();
-        $user->updated_user_id = Auth::id();
-        $user->deleted_user_id = null;
-        $user->save();
-
-        return $user;
-    }
-}
-<?php
+// app/Http/Controllers/AuthController.php
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\RegisterRequest;
-use App\Models\User;
-use App\Services\RegisterService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
-class UserController extends Controller
+class AuthController extends Controller
 {
-    protected $registerService;
-
-    public function __construct(RegisterService $registerService)
-    {
-        $this->registerService = $registerService;
-    }
-
-    public function create()
-    {
-        return view('user_form');
-    }
-
-    public function store(RegisterRequest $request)
-    {
-        $user = $this->registerService->registerUser($request->validated());
-        return redirect()->route('users.edit', $user->id)->with('success', 'User registered successfully');
-    }
-
-    public function edit($id)
-    {
-        $user = User::findOrFail($id);
-        return view('user_form', compact('user'));
-    }
-
-    public function update(RegisterRequest $request, $id)
-    {
-        $user = $this->registerService->updateUser($id, $request->validated());
-        if ($user) {
-            return redirect()->route('users.edit', $user->id)->with('success', 'User updated successfully');
-        }
-        return redirect()->route('users.edit', $id)->with('error', 'User not found');
-    }
+public function showLoginForm()
+{
+return view('auth.login');
 }
-use App\Http\Controllers\UserController;
 
-Route::get('users/create', [UserController::class, 'create'])->name('users.create');
-Route::post('users', [UserController::class, 'store'])->name('users.store');
-Route::get('users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
-Route::put('users/{id}', [UserController::class, 'update'])->name('users.update');
-@if(isset($user))
-            @method('PUT')
-        @endif
+public function login(Request $request)
+{
+$request->validate([
+'email' => 'required|email',
+'password' => 'required',
+]);
+
+$user = User::where('email', $request->email)->first();
+
+if ($user && Hash::check($request->password, $user->password)) {
+Auth::login($user, $request->has('remember'));
+
+// If "Remember Me" is checked, store a cookie
+if ($request->has('remember')) {
+$rememberToken = $user->createToken('remember_me_token')->plainTextToken;
+$cookie = cookie('remember_me', $rememberToken, 43200); // 30 days
+
+return redirect()->intended('/home')->cookie($cookie);
+}
+
+return redirect()->intended('/home');
+}
+
+return redirect()->back()->withErrors(['email' => 'The provided credentials do not match our records.']);
+}
+
+public function logout(Request $request)
+{
+Auth::logout();
+
+// Forget the remember me cookie
+$cookie = \Cookie::forget('remember_me');
+
+return redirect('/login')->withCookie($cookie);
+}
+}
+
+
+// app/Http/Middleware/RememberMeMiddleware.php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+
+class RememberMeMiddleware
+{
+public function handle(Request $request, Closure $next)
+{
+if (!Auth::check() && $request->hasCookie('remember_me')) {
+$rememberToken = $request->cookie('remember_me');
+$user = User::where('remember_token', $rememberToken)->first();
+
+if ($user) {
+Auth::login($user);
+}
+}
+
+return $next($request);
+}
+}

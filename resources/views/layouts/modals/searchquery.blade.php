@@ -1,47 +1,165 @@
-<?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class User extends Model
+class Post extends Model
 {
-    // Other model methods and properties...
+protected $fillable = ['title', 'body', 'created_user_id'];
 
-    public function scopeSearch($query, $filters)
-    {
-        if (isset($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
-        }
-        if (isset($filters['email'])) {
-            $query->where('email', 'like', '%' . $filters['email'] . '%');
-        }
-        if (isset($filters['startDate']) && isset($filters['endDate'])) {
-            $query->whereBetween('created_at', [$filters['startDate'], $filters['endDate']]);
-        }
+public static function getFilteredPosts($searchTerm = null)
+{
+$user = Auth::user();
+$query = self::query();
 
-        if (Auth::user()->type !== 1) { // Assuming 1 is the admin type
-            $query->where('created_user_id', Auth::id());
-        }
-
-        return $query;
-    }
+if ($user->type != 1) {
+$query->where('created_user_id', $user->id);
 }
-<?php
+
+if ($searchTerm) {
+$query->where(function ($q) use ($searchTerm) {
+$q->where('title', 'LIKE', "%{$searchTerm}%")
+->orWhere('body', 'LIKE', "%{$searchTerm}%");
+});
+}
+
+return $query->get();
+}
+}
+namespace App\Services;
+
+use App\Models\Post;
+use Illuminate\Support\Facades\Auth;
+
+class PostService
+{
+public function getPosts($searchTerm = null)
+{
+return Post::getFilteredPosts($searchTerm);
+}
+
+public function createPost($validatedData)
+{
+$validatedData['created_user_id'] = Auth::user()->id;
+return Post::create($validatedData);
+}
+
+public function uploadCsvData($csvData)
+{
+$rows = array_map('str_getcsv', explode("\n", $csvData));
+$header = array_shift($rows);
+
+foreach ($rows as $row) {
+if (count($header) == count($row)) {
+$row = array_combine($header, $row);
+Post::create([
+'title' => $row['title'],
+'body' => $row['body'],
+'created_user_id' => Auth::user()->id,
+]);
+}
+}
+}
+
+public function generateExcelFile($searchTerm = null)
+{
+$posts = $this->getPosts($searchTerm);
+
+$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
+
+// Add headers
+$sheet->setCellValue('A1', 'ID');
+$sheet->setCellValue('B1', 'Title');
+$sheet->setCellValue('C1', 'Body');
+$sheet->setCellValue('D1', 'Created User ID');
+$sheet->setCellValue('E1', 'Created At');
+
+// Add data rows
+$row = 2;
+foreach ($posts as $post) {
+$sheet->setCellValue('A' . $row, $post->id);
+$sheet->setCellValue('B' . $row, $post->title);
+$sheet->setCellValue('C' . $row, $post->body);
+$sheet->setCellValue('D' . $row, $post->created_user_id);
+$sheet->setCellValue('E' . $row, $post->created_at);
+$row++;
+}
+
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+return $writer;
+}
+}
+
+
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Services\PostService;
+use App\Http\Requests\PostCreateRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-class UserController extends Controller
+class PostController extends Controller
 {
-    public function index(Request $request)
-    {
-        $filters = $request->only(['name', 'email', 'startDate', 'endDate']);
-        $users = User::search($filters)->paginate(10);
+protected $postService;
 
-        return view('user_list', compact('users'));
-    }
+public function __construct(PostService $postService)
+{
+$this->postService = $postService;
+}
+
+public function postListPage(Request $request)
+{
+$searchTerm = $request->input('searchKey');
+$posts = $this->postService->getPosts($searchTerm);
+
+return view('post.postList', compact('posts', 'searchTerm'));
+}
+
+public function postCreatePage()
+{
+return view('post.createPost');
+}
+
+public function postAdd(PostCreateRequest $request)
+{
+try {
+$this->postService->createPost($request->validated());
+
+return redirect()->route('post.postlist')->with('success', 'Post Creation Success.');
+} catch (\Exception $e) {
+return redirect()->back()->withErrors($e->getMessage())->withInput();
+}
+}
+
+public function uploadCsv(Request $request)
+{
+if ($request->hasFile('csv_file')) {
+$file = $request->file('csv_file');
+$csvData = file_get_contents($file);
+
+$this->postService->uploadCsvData($csvData);
+}
+
+return redirect()->route('post.postlist')->with('success', 'CSV data uploaded successfully.');
+}
+
+public function downloadExcel(Request $request)
+{
+$searchTerm = $request->input('searchKey');
+$writer = $this->postService->generateExcelFile($searchTerm);
+
+$filename = 'posts.xlsx';
+return response()->stream(
+function () use ($writer) {
+$writer->save('php://output');
+},
+200,
+[
+'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+]
+);
+}
 }
