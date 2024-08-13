@@ -17,18 +17,21 @@ class RegisterService
         $user->password = Hash::make($data['password']);
         $user->phone = $data['phone'] ?? null;
         $user->address = $data['address'] ?? null;
-        $user->type = $data['type'] ?? 1;
-        $file = $data['profile']->hasFile('profile');
-        $fileName = uniqid() . $file->getClientOriginalName();
-        $user->profile = $fileName;
+        $user->type =  1;
+        if (isset($data['profile'])) {
+            $file = $data['profile']->hasFile('profile');
+            $fileName = uniqid() . $file->getClientOriginalName();
+            $user->profile = $fileName;
+        }
+
         if (isset($data['dob'])) {
             $user->dob = Carbon::parse(($data['dob']));
         }
 
 
 
-        $user->created_user_id = Auth::id() ?? null;
-        $user->updated_user_id = Auth::id() ?? null;
+        $user->created_user_id = 1 ?? null;
+        $user->updated_user_id = 1 ?? null;
         $user->deleted_user_id = null;
         $user->save();
 

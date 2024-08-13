@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('address')->nullable();
             $table->integer('type')->default(0);
             $table->date('dob')->nullable();
-            $table->string('profile');
+            $table->string('profile')->default('user');
             $table->unsignedBigInteger('created_user_id');
             $table->unsignedBigInteger('updated_user_id');
             $table->unsignedBigInteger('deleted_user_id')->nullable();

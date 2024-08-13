@@ -163,3 +163,81 @@ $writer->save('php://output');
 );
 }
 }
+
+
+
+
+
+
+// app/Http/Controllers/PostController.php
+
+namespace App\Http\Controllers;
+
+use App\Models\Post;
+use App\Services\PostService;
+use App\Http\Requests\PostEditRequest;
+use App\Http\Requests\PostUpdateRequest;
+use Illuminate\Http\Request;
+
+class PostController extends Controller
+{
+protected $postService;
+
+public function __construct(PostService $postService)
+{
+$this->postService = $postService;
+}
+
+public function edit(Post $post)
+{
+return view('posts.edit', compact('post'));
+}
+
+public function previewEdit(PostEditRequest $request, Post $post)
+{
+$validatedData = $request->validated();
+$updatedPost = $this->postService->handleEditPreview($post, $validatedData);
+
+return view('posts.previewEdit', compact('post', 'updatedPost'));
+}
+
+public function update(PostUpdateRequest $request, Post $post)
+{
+$validatedData = $request->validated();
+$this->postService->updatePost($post, $validatedData);
+
+return redirect()->route('posts.edit', $post)->with('success', 'Post updated successfully.');
+}
+}
+// app/Services/PostService.php
+
+namespace App\Services;
+
+use App\Models\Post;
+use Illuminate\Support\Facades\Auth;
+
+class PostService
+{
+public function handleEditPreview($post, $validatedData)
+{
+// Prepare data for preview
+$updatedPost = [
+'title' => $validatedData['title'],
+'body' => $validatedData['body'],
+'status' => $post->status, // Keep the original status
+];
+
+return $updatedPost;
+}
+
+public function updatePost(Post $post, array $data)
+{
+// Update the post with the confirmed data
+$post->update([
+'title' => $data['title'],
+'body' => $data['body'],
+]);
+
+return $post;
+}
+}

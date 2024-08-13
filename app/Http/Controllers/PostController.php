@@ -32,7 +32,34 @@ class PostController extends Controller
 
         return view('post.postList', compact('posts', 'searchTerm'));
     }
+    public function postEdit($id)
+    {
+        $post = Post::find($id);
+        return view('post.editPost', compact('post'));
+    }
+    public function previewEdit(Request $request, Post $post)
+    {
+        // Gather the edited data to preview
+        $updatePost = $request->only(['title', 'body']);
+        $updatedPost['status'] = $post->status; // Maintain the original status
 
+        return view('post.confirmEditPost', compact('post', 'updatePost'));
+    }
+    public function update(Request $request, Post $post)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required',
+        ]);
+
+        // Update the post with the confirmed data
+        $post->update([
+            'title' => $request->title,
+            'body' => $request->body,
+        ]);
+
+        return redirect()->route('post.postlist', $post)->with('success', 'Post updated successfully.');
+    }
     public function postCreatePage()
     {
         return view('post.createPost');

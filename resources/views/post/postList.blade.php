@@ -48,7 +48,7 @@
                         <td>{{ $post->user->name }}</td>
                         <td>{{ $post->created_at }}</td>
                         <td>
-                            <a href="" class="btn btn-info">Edit</a>
+                            <a href="{{ route('post.edit', $post->id) }}" class="btn btn-info">Edit</a>
                             <a class="text-decoration-none btn btn-danger" href="" data-bs-toggle="modal"
                                 data-bs-target="#delete">
                                 Delete

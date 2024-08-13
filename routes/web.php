@@ -25,6 +25,9 @@ Route::get('user/profile/edit', [ProfileController::class, 'profileEditPage'])->
 Route::get('/post/list', [PostController::class, 'postListPage'])->name('post.postlist');
 Route::get('post/create/page', [PostController::class, 'postCreatePage'])->name('post.postCreatePage');
 Route::post('/post/add', [PostController::class, 'postAdd'])->name('post.add');
+Route::get('/post/edit/{id}', [PostController::class, 'postEdit'])->name('post.edit');
+Route::post('posts/{post}/preview-edit', [PostController::class, 'previewEdit'])->name('post.preview');
+Route::post('posts/{post}/update', [PostController::class, 'update'])->name('posts.update');
 
 //CSV
 Route::post('/posts/upload', [PostController::class, 'uploadCsv'])->name('post.upload');
