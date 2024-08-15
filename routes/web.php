@@ -22,6 +22,14 @@ Route::post('user/store', [UserController::class, 'createUser'])->name('user.sto
 
 Route::get('user/profile', [ProfileController::class, 'profilePage'])->name('user.profilePage');
 Route::get('user/profile/edit', [ProfileController::class, 'profileEditPage'])->name('user.profileEdit');
+
+Route::get('password/forgot', [AuthController::class, 'forgotPassword'])->name('password.forgot');
+Route::get('forgot-password', [AuthController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
+
 Route::get('/post/list', [PostController::class, 'postListPage'])->name('post.postlist');
 Route::get('post/create/page', [PostController::class, 'postCreatePage'])->name('post.postCreatePage');
 Route::post('/post/add', [PostController::class, 'postAdd'])->name('post.add');

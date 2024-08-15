@@ -7,8 +7,12 @@ use App\Services\RegisterService;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\RegisterRequest;
+use App\Services\PasswordService;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+
 
 class AuthController extends Controller
 {
@@ -28,11 +32,13 @@ class AuthController extends Controller
 
     protected $loginService;
     protected $registerService;
+    protected $authService;
 
-    public function __construct(LoginService $loginService, RegisterService $registerService)
+    public function __construct(LoginService $loginService, RegisterService $registerService, PasswordService $authService)
     {
         $this->loginService = $loginService;
         $this->registerService = $registerService;
+        $this->authService = $authService;
     }
 
     public function login(LoginRequest $request)
@@ -59,5 +65,21 @@ class AuthController extends Controller
         Auth::logout();
 
         return redirect()->route('loginPage');
+    }
+
+    public function forgotPassword()
+    {
+        return view('auth.forgotPassword');
+    }
+
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = $this->authService->sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with(['success' => __($status)])
+            : back()->withErrors(['email' => __($status)]);
     }
 }

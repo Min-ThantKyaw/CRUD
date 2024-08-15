@@ -54,7 +54,8 @@
 
                         <div class="d-flex">
                             <input type="checkbox" name="remember">Remember Me
-                            <a href="" class="px-5 text-decoration-none">Forget Password?</a>
+                            <a href="{{ route('password.forgot') }}" class="px-5 text-decoration-none">Forget
+                                Password?</a>
                         </div>
                         <button class="btn btn-success form-control mt-md-3" type="submit">Login</button>
                     </form>

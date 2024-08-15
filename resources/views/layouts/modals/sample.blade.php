@@ -77,3 +77,30 @@ Auth::login($user);
 return $next($request);
 }
 }
+namespace App\Http\Controllers;
+
+use App\Services\UserService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class UserController extends Controller
+{
+protected $userService;
+
+public function __construct(UserService $userService)
+{
+$this->userService = $userService;
+}
+
+public function changePassword(Request $request)
+{
+$result = $this->userService->changePassword($request->oldPassword, $request->newPassword);
+
+if ($result) {
+Auth::logout();
+return redirect()->route('auth#loginPage');
+}
+
+return back()->with(['notMatch' => 'Old Password is not correct.']);
+}
+}
