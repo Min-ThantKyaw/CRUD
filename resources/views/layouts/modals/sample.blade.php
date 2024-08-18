@@ -1,106 +1,139 @@
-// app/Http/Controllers/AuthController.php
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Support\Facades\Mail;
+
+class PasswordResetMail
+{
+    public function sendPasswordResetEmail($email, $token)
+    {
+        Mail::send('emails.password-reset', ['token' => $token], function ($message) use ($email) {
+            $message->to($email);
+            $message->subject('Reset Password');
+        });
+    }
+}
+<?php
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\User;
+use Illuminate\View\View;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\PasswordReset;
+use App\Services\passwordService;
+use Illuminate\Support\Facades\DB;
+use App\Mail\PasswordResetMail;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
+use App\Http\Requests\passwordChangeRequest;
+use Illuminate\Auth\Notifications\ResetPassword;
 
-class AuthController extends Controller
+class PasswordController extends Controller
 {
-public function showLoginForm()
-{
-return view('auth.login');
+    protected $passwordService;
+    protected $passwordResetMail;
+    /**
+     * Summary of __construct
+     * @param passwordService $passwordService
+     */
+    public function __construct(PasswordService $passwordService, PasswordResetMail $passwordResetMail)
+    {
+        $this->passwordService = $passwordService;
+        $this->passwordResetMail = $passwordResetMail;
+    }
+    /**
+     * Summary of passwordChangePage
+     * @param mixed $id
+     * @return View
+     */
+    public function passwordChangePage(): View
+    {
+        return view('auth.changePassword');
+    }
+    public function passwordChange(passwordChangeRequest $request)
+    {
+        $this->passwordService->passwordChange($request);
+        return redirect()->route('user.userlist')->with('success', 'Password is successfully updated.');
+    }
+
+    public function showLinkRequestForm()
+    {
+        return view('auth.forgot-password');
+    }
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|exists:users,email',
+        ]);
+
+        $token = $this->passwordService->createPasswordResetToken($request->email);
+        $this->passwordResetMail->sendPasswordResetEmail($request->email, $token);
+
+        return back()->with('success', 'Email has been sent. Check your email.');
+    }
+
+    public function showResetPasswordForm($token)
+    {
+        return view('auth.reset-password', compact('token'));
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $user = $this->passwordService->findUserByToken($request->token);
+
+        if (!$user) {
+            return redirect()->route('password.reset.form')->with('error', 'Invalid token.');
+        }
+
+        $this->passwordService->updateUserPassword($user->email, $request->password);
+
+        return redirect()->route('loginPage')->with('success', 'Password reset successfully. Login to your account.');
+    }
 }
+public function createPasswordResetToken($email)
+    {
+        $token = Str::random(60);
 
-public function login(Request $request)
-{
-$request->validate([
-'email' => 'required|email',
-'password' => 'required',
-]);
+        DB::table('password_resets')->insert([
+            'email' => $email,
+            'token' => $token,
+            'created_at' => Carbon::now(),
+        ]);
 
-$user = User::where('email', $request->email)->first();
+        return $token;
+    }
 
-if ($user && Hash::check($request->password, $user->password)) {
-Auth::login($user, $request->has('remember'));
+    public function findUserByToken($token)
+    {
+        $passwordReset = PasswordReset::where('token', $token)->first();
+        return $passwordReset ? User::where('email', $passwordReset->email)->first() : null;
+    }
 
-// If "Remember Me" is checked, store a cookie
-if ($request->has('remember')) {
-$rememberToken = $user->createToken('remember_me_token')->plainTextToken;
-$cookie = cookie('remember_me', $rememberToken, 43200); // 30 days
+    public function updateUserPassword($email, $password)
+    {
+        User::where('email', $email)->update(['password' => Hash::make($password)]);
+        DB::table('password_resets')->where('email', $email)->delete();
+    }
+    Route::get('forgot-password', [PasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('forgot-password', [PasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset/password/{token}', [PasswordController::class, 'showResetPasswordForm'])->name('password.reset.form');
+Route::post('/reset/password/comfirm', [PasswordController::class, 'resetPassword'])->name('password.reset');
+<!DOCTYPE html>
+<html>
 
-return redirect()->intended('/home')->cookie($cookie);
-}
+<head>
+    <title>Password Reset</title>
+</head>
 
-return redirect()->intended('/home');
-}
+<body>
+    <p>Hello,</p>
+    <p>Click the link below to reset your password:</p>
+    <a href="{{ route('password.reset.form', $token) }}">Reset Password</a>
+</body>
 
-return redirect()->back()->withErrors(['email' => 'The provided credentials do not match our records.']);
-}
-
-public function logout(Request $request)
-{
-Auth::logout();
-
-// Forget the remember me cookie
-$cookie = \Cookie::forget('remember_me');
-
-return redirect('/login')->withCookie($cookie);
-}
-}
-
-
-// app/Http/Middleware/RememberMeMiddleware.php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-
-class RememberMeMiddleware
-{
-public function handle(Request $request, Closure $next)
-{
-if (!Auth::check() && $request->hasCookie('remember_me')) {
-$rememberToken = $request->cookie('remember_me');
-$user = User::where('remember_token', $rememberToken)->first();
-
-if ($user) {
-Auth::login($user);
-}
-}
-
-return $next($request);
-}
-}
-namespace App\Http\Controllers;
-
-use App\Services\UserService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
-class UserController extends Controller
-{
-protected $userService;
-
-public function __construct(UserService $userService)
-{
-$this->userService = $userService;
-}
-
-public function changePassword(Request $request)
-{
-$result = $this->userService->changePassword($request->oldPassword, $request->newPassword);
-
-if ($result) {
-Auth::logout();
-return redirect()->route('auth#loginPage');
-}
-
-return back()->with(['notMatch' => 'Old Password is not correct.']);
-}
-}
+</html>
